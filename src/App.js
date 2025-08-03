@@ -117,24 +117,29 @@ export default function App() {
     useEffect(() => {
         const initAuth = async () => {
             try {
+                // The environment may provide a custom token. This token is only valid
+                // for the environment's own Firebase project. If you have provided your
+                // own firebaseConfig, this token will be invalid, causing a mismatch.
+                // The code handles this by falling back to anonymous sign-in.
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    // Attempt to sign in with the custom token provided by the environment.
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
-                    // If no custom token is available, sign in anonymously.
+                    // If no custom token is provided by the environment, sign in anonymously.
                     await signInAnonymously(auth);
                 }
             } catch (error) {
-                console.error("Authentication failed:", error);
-                // If the custom token fails (e.g., mismatch with user's firebaseConfig),
-                // fall back to anonymous sign-in as a robust measure.
+                // This error is expected if you are running the code with your own
+                // firebaseConfig in an environment that provides its own auth token.
                 if (error.code === 'auth/custom-token-mismatch') {
-                    console.log("Custom token mismatch. Falling back to anonymous sign-in.");
+                    console.log("Custom token mismatch detected. This is expected. Falling back to anonymous sign-in.");
                     try {
                         await signInAnonymously(auth);
-                    } catch (anonError) {
-                        console.error("Anonymous fallback sign-in failed:", anonError);
+                    } catch (fallbackError) {
+                        console.error("Anonymous fallback sign-in also failed:", fallbackError);
                     }
+                } else {
+                    // For any other unexpected authentication errors, log them.
+                    console.error("An unexpected authentication error occurred:", error);
                 }
             }
         };
