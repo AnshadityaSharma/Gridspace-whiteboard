@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import {
     ArrowLeft, Edit, Eye, Check, X, Share2, Minus, Plus, Trash2, LogOut, Sun, Moon, Laptop,
@@ -16,7 +16,8 @@ const firebaseConfig = {
   messagingSenderId: "142967188261",
   appId: "1:142967188261:web:1ba1f02e649fd4c94f08cc"
 };
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-whiteboard-app';
+// This is a static ID for your app's data paths.
+const appId = 'gridspace-whiteboard-public';
 
 
 // --- Firebase Initialization ---
@@ -115,32 +116,12 @@ export default function App() {
     }, [theme]);
 
     useEffect(() => {
+        // For a deployed app, we will always sign in anonymously.
         const initAuth = async () => {
             try {
-                // The environment may provide a custom token. This token is only valid
-                // for the environment's own Firebase project. If you have provided your
-                // own firebaseConfig, this token will be invalid, causing a mismatch.
-                // The code handles this by falling back to anonymous sign-in.
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    // If no custom token is provided by the environment, sign in anonymously.
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
             } catch (error) {
-                // This error is expected if you are running the code with your own
-                // firebaseConfig in an environment that provides its own auth token.
-                if (error.code === 'auth/custom-token-mismatch') {
-                    console.log("Custom token mismatch detected. This is expected. Falling back to anonymous sign-in.");
-                    try {
-                        await signInAnonymously(auth);
-                    } catch (fallbackError) {
-                        console.error("Anonymous fallback sign-in also failed:", fallbackError);
-                    }
-                } else {
-                    // For any other unexpected authentication errors, log them.
-                    console.error("An unexpected authentication error occurred:", error);
-                }
+                console.error("Anonymous sign-in failed:", error);
             }
         };
 
@@ -834,7 +815,7 @@ function HomeScreen({ user, onJoinSession }) {
         <div className="flex flex-col items-center justify-center min-h-screen p-4">
             <div className={`w-full max-w-md mx-auto bg-[var(--bg-secondary)] rounded-lg border border-[var(--border-primary)] shadow-[0_0_20px_var(--accent-glow)] p-8 transition-all duration-700 ease-out ${isMounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
                 <h1 className="text-4xl font-bold text-center text-[var(--accent-primary)] mb-2 tracking-wider">GRIDSPACE WHITEBOARD</h1>
-                <p className="text-center text-[var(--text-secondary)] mb-8">Real-time Visual Collaboration. Your UID: <span className="font-mono bg-[var(--bg-tertiary)] p-1 rounded text-[var(--accent-secondary)]">{user.uid}</span></p>
+                <p className="text-center text-[var(--text-secondary)] mb-8">Real-time Visual Collaboration. Your UID: <span className="font-mono bg-[var(--bg-tertiary)] p-1 rounded text-[var(--accent-secondary)]">{user?.uid || '...'}</span></p>
                 <div className="mb-6">
                     <label htmlFor="name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">Call-Sign</label>
                     <input id="name" type="text" value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Enter your name"
