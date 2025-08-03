@@ -3,8 +3,8 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
 import {
-    ArrowLeft, Edit, Eye, Check, X, Share2, Palette, Minus, Plus, Trash2, LogOut, Sun, Moon, Laptop,
-    MousePointer, Square, Circle, Eraser, Pipette, Type, Undo, Redo, SquareSlash, Terminal
+    ArrowLeft, Edit, Eye, Check, X, Share2, Minus, Plus, Trash2, LogOut, Sun, Moon, Laptop,
+    MousePointer, Square, Circle, Pipette, Type, Undo, Redo, SquareSlash, Terminal
 } from 'lucide-react';
 
 // --- Firebase Configuration ---
@@ -17,6 +17,8 @@ const firebaseConfig = {
   appId: "1:142967188261:web:1ba1f02e649fd4c94f08cc"
 };
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-whiteboard-app';
+
+
 // --- Firebase Initialization ---
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -116,15 +118,34 @@ export default function App() {
         const initAuth = async () => {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    // Attempt to sign in with the custom token provided by the environment.
                     await signInWithCustomToken(auth, __initial_auth_token);
-                } else { await signInAnonymously(auth); }
-            } catch (error) { console.error("Authentication failed:", error); }
+                } else {
+                    // If no custom token is available, sign in anonymously.
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Authentication failed:", error);
+                // If the custom token fails (e.g., mismatch with user's firebaseConfig),
+                // fall back to anonymous sign-in as a robust measure.
+                if (error.code === 'auth/custom-token-mismatch') {
+                    console.log("Custom token mismatch. Falling back to anonymous sign-in.");
+                    try {
+                        await signInAnonymously(auth);
+                    } catch (anonError) {
+                        console.error("Anonymous fallback sign-in failed:", anonError);
+                    }
+                }
+            }
         };
+
         const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
             setLoading(false);
         });
+        
         initAuth();
+        
         return () => unsubscribe();
     }, []);
 
