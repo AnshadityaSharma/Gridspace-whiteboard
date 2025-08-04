@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 // --- Firebase Configuration ---
+// This uses the configuration object you provided.
 const firebaseConfig = {
   apiKey: "AIzaSyBIrYTsM-yd_jwQ5d0tCNO1GF1Koztemdc",
   authDomain: "gridspace-whiteboard.firebaseapp.com",
@@ -16,7 +17,7 @@ const firebaseConfig = {
   messagingSenderId: "142967188261",
   appId: "1:142967188261:web:1ba1f02e649fd4c94f08cc"
 };
-// This is a static ID for your app's data paths.
+// This is a static ID for your app's data paths. It's safe to be here.
 const appId = 'gridspace-whiteboard-public';
 
 
@@ -116,7 +117,6 @@ export default function App() {
     }, [theme]);
 
     useEffect(() => {
-        // For a deployed app, we will always sign in anonymously.
         const initAuth = async () => {
             try {
                 await signInAnonymously(auth);
