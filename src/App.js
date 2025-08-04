@@ -117,6 +117,7 @@ export default function App() {
     }, [theme]);
 
     useEffect(() => {
+        // For a deployed app, we will always sign in anonymously.
         const initAuth = async () => {
             try {
                 await signInAnonymously(auth);
